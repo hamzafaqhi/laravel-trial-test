@@ -1,0 +1,48 @@
+version: "3.7"
+services:
+
+
+networks:
+  trail-test:
+    driver: bridge
+app:
+    build:
+        args:
+        user: root
+        uid: 1000
+        context: ./
+        dockerfile: Dockerfile
+    image: trial-test
+    container_name: trial-test-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+        - ./:/var/www
+    networks:
+        - trial-test
+db:
+    image: mysql:8.0
+    container_name: trail-test-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - trail-test
+nginx:
+    image: nginx:1.17-alpine
+    container_name: trial-test-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d
+    networks:
+      - trial-test
